@@ -126,10 +126,17 @@ def hmm_filter(
         log_normalizer, predicted_probs = carry
 
         A = get_trans_mat(transition_matrix, transition_fn, t)
+
+        # These are the log likelihoods calculated from the emission probabilities
+        # provided at timestep t to the hmm initializer. They are not estimated log probs
         ll = log_likelihoods[t]
 
+        # Probability of state for time T conditioned on all observations
+        # where predicted probs is conditioned on 1:t-1 and ll is conditioned on t
         filtered_probs, log_norm = _condition_on(predicted_probs, ll)
         log_normalizer += log_norm
+
+        # Predicted probabilities for step t+1
         predicted_probs_next = _predict(filtered_probs, A)
 
         return (log_normalizer, predicted_probs_next), (filtered_probs, predicted_probs)
