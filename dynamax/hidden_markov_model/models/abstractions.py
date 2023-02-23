@@ -562,7 +562,10 @@ class HMM(SSM):
         return hmm_posterior_mode(*self._inference_args(params, emissions, inputs))
 
     def filter(self, params, emissions, inputs=None):
-        return hmm_filter(*self._inference_args(params, emissions, inputs))
+        args = self._inference_args(params, emissions, inputs)
+        probs, transition_matrix, log_probs =args
+        print("log_probs;", log_probs)
+        return hmm_filter(*args)
 
     def smoother(self, params, emissions, inputs=None):
         return hmm_smoother(*self._inference_args(params, emissions, inputs))

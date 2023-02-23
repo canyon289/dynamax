@@ -3,6 +3,7 @@ import jax.random as jr
 from jax import lax
 from jax import vmap
 from jax import jit
+import jax
 from functools import partial
 
 from typing import Callable, Optional, Tuple, Union, NamedTuple
@@ -73,6 +74,7 @@ def _normalize(u, axis=0, eps=1e-15):
 
 
 # Helper functions for the two key filtering steps
+import jax
 def _condition_on(probs, ll):
     """Condition on new emissions, given in the form of log likelihoods
     for each discrete state, while avoiding numerical underflow.
@@ -122,16 +124,25 @@ def hmm_filter(
     """
     num_timesteps, num_states = log_likelihoods.shape
 
+    """
+    The transitions matrix and log likelihoods come from global state
+    """
     def _step(carry, t):
         log_normalizer, predicted_probs = carry
+        jax.debug.print("Iteration: {}", t)
+        jax.debug.print("predicted_probs: {}", predicted_probs)
 
         A = get_trans_mat(transition_matrix, transition_fn, t)
         ll = log_likelihoods[t]
+        jax.debug.print("Log Likelihood of emission given state: {}", ll)
 
         filtered_probs, log_norm = _condition_on(predicted_probs, ll)
+        jax.debug.print("Filtered probs: {}", filtered_probs)
+
         log_normalizer += log_norm
         predicted_probs_next = _predict(filtered_probs, A)
-
+        jax.debug.print("Predicted probs: {}", predicted_probs_next)
+        jax.debug.print("\n")
         return (log_normalizer, predicted_probs_next), (filtered_probs, predicted_probs)
 
     carry = (0.0, initial_distribution)
